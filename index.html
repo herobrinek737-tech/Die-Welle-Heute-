@@ -1,630 +1,654 @@
-import React, { useState, useEffect } from 'react';
-import { BookOpen, Users, Brain, ShieldAlert, AlertTriangle, History, ShieldCheck, Link, ArrowRight, CheckCircle, HelpCircle } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Die Welle - Projekt</title>
 
-// --- CUSTOM STYLES (Animations & Effects) ---
-const customStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600&display=swap');
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  :root {
-    --neon-blue: #00d2ff;
-    --dark-bg: #0b0f19;
-  }
+  <!-- Phosphor Icons (ersetzt Lucide Icons für einfache HTML-Nutzung) -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-  html {
-    scroll-behavior: smooth;
-  }
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
-  body {
-    background-color: var(--dark-bg);
-    color: #f8fafc;
-    font-family: 'Inter', sans-serif;
-    overflow-x: hidden;
-  }
+  <!-- Babel (um JSX direkt im Browser auszuführen) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  h1, h2, h3, .font-heading {
-    font-family: 'Rajdhani', sans-serif;
-  }
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600&display=swap');
 
-  /* Neon Effects */
-  .neon-text {
-    text-shadow: 0 0 5px rgba(0, 210, 255, 0.5), 0 0 10px rgba(0, 210, 255, 0.3);
-  }
-  
-  .neon-border {
-    box-shadow: 0 0 10px rgba(0, 210, 255, 0.2), inset 0 0 10px rgba(0, 210, 255, 0.1);
-    border: 1px solid rgba(0, 210, 255, 0.3);
-  }
-
-  .neon-border:hover {
-    box-shadow: 0 0 15px rgba(0, 210, 255, 0.5), inset 0 0 15px rgba(0, 210, 255, 0.2);
-    border: 1px solid var(--neon-blue);
-  }
-
-  /* Glitch Effect */
-  .glitch-wrapper {
-    position: relative;
-  }
-  
-  .glitch {
-    position: relative;
-    color: white;
-    font-weight: 700;
-  }
-  
-  .glitch::before, .glitch::after {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.8;
-  }
-  
-  .glitch::before {
-    left: 2px;
-    text-shadow: -2px 0 #ff00c1;
-    clip: rect(44px, 450px, 56px, 0);
-    animation: glitch-anim 5s infinite linear alternate-reverse;
-  }
-  
-  .glitch::after {
-    left: -2px;
-    text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
-    animation: glitch-anim2 5s infinite linear alternate-reverse;
-  }
-
-  @keyframes glitch-anim {
-    0% { clip-path: inset(20% 0 80% 0); }
-    20% { clip-path: inset(60% 0 10% 0); }
-    40% { clip-path: inset(40% 0 50% 0); }
-    60% { clip-path: inset(80% 0 5% 0); }
-    80% { clip-path: inset(10% 0 70% 0); }
-    100% { clip-path: inset(30% 0 40% 0); }
-  }
-
-  @keyframes glitch-anim2 {
-    0% { clip-path: inset(10% 0 60% 0); }
-    20% { clip-path: inset(80% 0 5% 0); }
-    40% { clip-path: inset(30% 0 20% 0); }
-    60% { clip-path: inset(70% 0 10% 0); }
-    80% { clip-path: inset(40% 0 50% 0); }
-    100% { clip-path: inset(20% 0 30% 0); }
-  }
-
-  /* Animated Wave Background */
-  .wave-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: -1;
-    background: linear-gradient(180deg, #0b0f19 0%, #06182c 100%);
-  }
-
-  .wave {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 200%;
-    height: 100px;
-    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%2300d2ff" fill-opacity="0.1" d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,170.7C960,192,1056,224,1152,218.7C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-    background-size: 50% 100%;
-    animation: wave-animation 10s linear infinite;
-  }
-
-  .wave2 {
-    bottom: 10px;
-    opacity: 0.5;
-    animation: wave-animation-reverse 15s linear infinite;
-    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%2300d2ff" fill-opacity="0.2" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,213.3C672,224,768,224,864,202.7C960,181,1056,139,1152,128C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-    background-size: 50% 100%;
-  }
-
-  @keyframes wave-animation {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  @keyframes wave-animation-reverse {
-    0% { transform: translateX(-50%); }
-    100% { transform: translateX(0); }
-  }
-
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #0b0f19;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #00d2ff;
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #00a0cc;
-  }
-`;
-
-// --- COMPONENTS ---
-
-const SectionTitle = ({ children, subtitle }) => (
-  <div className="mb-12 text-center">
-    <h2 className="text-4xl md:text-5xl font-bold font-heading text-white mb-4 neon-text inline-block">
-      {children}
-    </h2>
-    {subtitle && <p className="text-cyan-400 max-w-2xl mx-auto text-lg">{subtitle}</p>}
-  </div>
-);
-
-const Card = ({ children, className = "" }) => (
-  <div className={`bg-gray-900/80 backdrop-blur-sm p-6 rounded-xl neon-border transition-all duration-300 ${className}`}>
-    {children}
-  </div>
-);
-
-const handleScrollTo = (e, id) => {
-  e.preventDefault();
-  const element = document.getElementById(id);
-  if (element) {
-    const y = element.getBoundingClientRect().top + window.scrollY - 80;
-    window.scrollTo({ top: y, behavior: 'smooth' });
-  }
-};
-
-// --- SECTIONS ---
-
-const Hero = () => (
-  <section className="relative min-h-screen flex items-center justify-center pt-20 px-4">
-    <div className="wave-bg">
-      <div className="wave"></div>
-      <div className="wave wave2"></div>
-    </div>
-    <div className="z-10 text-center max-w-4xl mx-auto">
-      <div className="inline-block mb-4 px-4 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm tracking-widest uppercase animate-pulse">
-        Klasse 8–12 Projekt
-      </div>
-      <div className="glitch-wrapper mb-6">
-        <h1 className="text-6xl md:text-8xl font-bold font-heading glitch uppercase tracking-wider" data-text="DIE WELLE">
-          DIE WELLE
-        </h1>
-      </div>
-      <h2 className="text-2xl md:text-4xl font-heading text-white mb-6">
-        Könnte es heute <span className="text-cyan-400">wieder passieren?</span>
-      </h2>
-      <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-        Eine interaktive Webseite über Gruppendruck, Autorität, Manipulation in sozialen Medien und die Bedeutung unserer Demokratie.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="#das-buch" onClick={(e) => handleScrollTo(e, 'das-buch')} className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-bold text-lg rounded-lg transition-all shadow-[0_0_20px_rgba(0,210,255,0.4)] hover:shadow-[0_0_30px_rgba(0,210,255,0.6)] flex items-center justify-center cursor-pointer">
-          Buch entdecken <ArrowRight className="ml-2 w-5 h-5" />
-        </a>
-        <a href="#selbsttest" onClick={(e) => handleScrollTo(e, 'selbsttest')} className="px-8 py-4 border border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 font-bold text-lg rounded-lg transition-all flex items-center justify-center cursor-pointer">
-          Zum Selbsttest
-        </a>
-      </div>
-    </div>
-  </section>
-);
-
-const DasBuch = () => {
-  const timeline = [
-    { day: "Tag 1", title: "Disziplin", desc: "Macht durch Disziplin. Aufrechtes Sitzen, schnelle Antworten. Die Schüler sind fasziniert von der neuen Effizienz." },
-    { day: "Tag 2", title: "Gemeinschaft", desc: "Macht durch Gemeinschaft. Ein Wir-Gefühl entsteht. Ein eigenes Symbol und ein Gruß werden eingeführt." },
-    { day: "Tag 3", title: "Ausgrenzung", desc: "Macht durch Handeln. Mitgliedskarten verteilen Rollen. Wer nicht mitmacht, gehört nicht dazu." },
-    { day: "Tag 4", title: "Kontrolle", desc: "Leibwächter werden ernannt. Schüler spionieren sich gegenseitig aus. Die Situation eskaliert auf dem Schulhof." },
-    { day: "Tag 5", title: "Zusammenbruch", desc: "Die Versammlung. Der Lehrer enthüllt, dass sie sich genau wie im Nationalsozialismus verhalten haben. Schock." }
-  ];
-
-  return (
-    <section id="das-buch" className="py-24 px-4 bg-gray-950/50">
-      <div className="max-w-6xl mx-auto">
-        <SectionTitle subtitle="Von Morton Rhue (1981) – Basierend auf einem wahren Experiment von 1967.">Das Buch</SectionTitle>
-        
-        <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
-          <Card>
-            <BookOpen className="w-12 h-12 text-cyan-400 mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-2 font-heading">Handlungskurzfassung</h3>
-            <p className="text-gray-100 text-lg leading-relaxed mb-4">
-              Der Geschichtslehrer Ben Ross will seinen Schülern erklären, wie der Nationalsozialismus entstehen konnte. Da die Schüler nicht glauben, dass so etwas heute noch möglich wäre, startet er ein Experiment: "Die Welle".
-            </p>
-            <p className="text-gray-100 text-lg leading-relaxed">
-              Aus einem unschuldigen Spiel mit Disziplin und Gemeinschaftsgefühl wird rasch eine autoritäre Bewegung, die Andersdenkende unterdrückt.
-            </p>
-          </Card>
-          
-          <div className="relative border-l-2 border-cyan-900 pl-8 ml-4 md:ml-0">
-            {timeline.map((item, idx) => (
-              <div key={idx} className="mb-8 relative">
-                <div className="absolute w-4 h-4 bg-cyan-500 rounded-full -left-[41px] top-1 shadow-[0_0_10px_#00d2ff]"></div>
-                <h4 className="text-xl font-bold text-cyan-400 mb-1">{item.day}: {item.title}</h4>
-                <p className="text-gray-200 text-lg">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const Psychologie = () => {
-  const [showAnswer, setShowAnswer] = useState(false);
-
-  return (
-    <section id="psychologie" className="py-24 px-4">
-      <div className="max-w-6xl mx-auto">
-        <SectionTitle subtitle="Die unsichtbaren Fäden, die unser Verhalten steuern.">Die Psychologie dahinter</SectionTitle>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          <Card>
-            <Users className="w-8 h-8 text-cyan-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2 font-heading">Gruppenzwang</h3>
-            <p className="text-gray-200 text-base">Der Drang, dazuzugehören. Menschen passen ihre Meinung an die Mehrheit an, aus Angst vor Isolation.</p>
-          </Card>
-          <Card>
-            <AlertTriangle className="w-8 h-8 text-cyan-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2 font-heading">Autorität</h3>
-            <p className="text-gray-200 text-base">Das Milgram-Experiment zeigte: Viele Menschen befolgen Anweisungen von Respektspersonen, selbst wenn sie moralisch falsch sind.</p>
-          </Card>
-          <Card>
-            <ShieldAlert className="w-8 h-8 text-cyan-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2 font-heading">Wir-gegen-Die</h3>
-            <p className="text-gray-200 text-base">Gruppen definieren sich oft über Feindbilder. Wer nicht für uns ist, ist gegen uns (Polarisierung).</p>
-          </Card>
-          <Card>
-            <Brain className="w-8 h-8 text-cyan-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2 font-heading">Echokammern</h3>
-            <p className="text-gray-200 text-base">Algorithmen zeigen uns nur Meinungen, die unsere eigene bestätigen. Widerspruch verschwindet.</p>
-          </Card>
-        </div>
-
-        <div className="bg-cyan-900/20 border border-cyan-800 rounded-2xl p-8 text-center">
-          <h3 className="text-2xl font-bold text-white mb-6 font-heading">Gedankenexperiment</h3>
-          <p className="text-xl md:text-2xl text-gray-100 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Stell dir vor, deine gesamte Klasse behauptet, eine offensichtlich falsche Antwort sei richtig. Würdest du als Einziger widersprechen?
-          </p>
-          {!showAnswer ? (
-            <button 
-              onClick={() => setShowAnswer(true)}
-              className="px-8 py-4 text-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold transition-colors cursor-pointer"
-            >
-              Realität anzeigen
-            </button>
-          ) : (
-            <div className="animate-fade-in">
-              <p className="text-cyan-300 text-xl mb-3"><strong>Asch-Konformitätsexperiment (1951):</strong></p>
-              <p className="text-gray-100 text-lg max-w-2xl mx-auto leading-relaxed">
-                Rund ein Drittel der Versuchspersonen passte sich der offensichtlich falschen Mehrheitsmeinung an. Der Druck der Gruppe ist oft stärker als die eigene Wahrnehmung.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const RelevanzHeute = () => (
-  <section id="relevanz" className="py-24 px-4 bg-gray-950/50">
-    <div className="max-w-6xl mx-auto">
-      <SectionTitle subtitle="Warum die Mechanismen der Welle 2026 präsenter sind denn je.">Warum ist das heute relevant?</SectionTitle>
-      
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="col-span-1 md:col-span-3 lg:col-span-1 flex flex-col justify-center">
-          <h3 className="text-3xl font-heading font-bold text-white mb-4">Demokratie unter Druck</h3>
-          <p className="text-gray-100 text-lg leading-relaxed mb-6">
-            Demokratie lebt von Diskussion, Kompromissen und Widerspruch. Doch in Krisenzeiten wirken autoritäre, einfache Lösungen oft verlockend.
-          </p>
-          <ul className="space-y-4">
-            <li className="flex items-start"><CheckCircle className="w-6 h-6 text-cyan-400 mr-3 mt-1 shrink-0"/> <span className="text-gray-200 text-lg">Extreme Bewegungen versprechen simple Antworten auf komplexe Fragen.</span></li>
-            <li className="flex items-start"><CheckCircle className="w-6 h-6 text-cyan-400 mr-3 mt-1 shrink-0"/> <span className="text-gray-200 text-lg">Kritisches Denken ist der beste Schutz gegen Manipulation.</span></li>
-          </ul>
-        </div>
-        
-        <Card className="lg:col-span-1">
-          <div className="text-cyan-400 text-5xl mb-4">📱</div>
-          <h4 className="text-2xl font-bold text-white mb-3">Soziale Medien</h4>
-          <p className="text-gray-200 text-base leading-relaxed">
-            TikTok, Instagram und Co. funktionieren wie Brandbeschleuniger. Algorithmen belohnen extreme, emotionale Inhalte, da sie die Nutzer länger auf der Plattform halten. Falschinformationen (Fake News) verbreiten sich oft schneller als Fakten, weil sie spektakulärer klingen.
-          </p>
-        </Card>
-
-        <Card className="lg:col-span-1">
-          <div className="text-cyan-400 text-5xl mb-4">🎭</div>
-          <h4 className="text-2xl font-bold text-white mb-3">Populismus weltweit</h4>
-          <p className="text-gray-200 text-base leading-relaxed">
-            Populismus teilt die Welt in "das reine Volk" und "die korrupte Elite". Komplexe Probleme (wie Klimawandel, Migration, Inflation) werden auf einfache Feindbilder reduziert. Diese Taktik wird von Parteien weltweit genutzt, um Wähler emotional an sich zu binden.
-          </p>
-        </Card>
-      </div>
-    </div>
-  </section>
-);
-
-const AfDDebatte = () => (
-  <section id="afd" className="py-24 px-4">
-    <div className="max-w-4xl mx-auto">
-      <SectionTitle subtitle="Eine sachliche Analyse aktueller politischer Phänomene am Beispiel der AfD in Deutschland.">Die AfD-Debatte</SectionTitle>
-      
-      <div className="bg-gray-800/50 rounded-xl p-6 md:p-10 neon-border border-gray-700">
-        <p className="text-gray-100 text-lg mb-8 italic border-l-4 border-cyan-500 pl-4 leading-relaxed">
-          Die Demokratie lebt davon, dass politische Positionen diskutiert, verstanden und kritisch hinterfragt werden. Hier geht es nicht um Pauschalurteile, sondern um das Verstehen von Mechanismen.
-        </p>
-
-        <div className="space-y-8">
-          <div>
-            <h4 className="text-2xl font-bold text-cyan-400 flex items-center mb-3">
-              <HelpCircle className="w-6 h-6 mr-3" /> Warum wählen Menschen die AfD?
-            </h4>
-            <p className="text-gray-200 pl-9 text-base md:text-lg leading-relaxed">
-              Viele Wähler treibt ein Gefühl des Protestes an. Sie fühlen sich von etablierten Parteien bei Themen wie Migration, Inflation oder Klimaschutzpolitik nicht verstanden oder bevormundet. Die AfD nutzt diese Sorgen und positioniert sich als einzige Alternative zum "Establishment".
-            </p>
-          </div>
-          <hr className="border-gray-600" />
-          <div>
-            <h4 className="text-2xl font-bold text-cyan-400 flex items-center mb-3">
-              <AlertTriangle className="w-6 h-6 mr-3" /> Welche Kritik gibt es an der Partei?
-            </h4>
-            <p className="text-gray-200 pl-9 text-base md:text-lg leading-relaxed">
-              Politikwissenschaftler und der Verfassungsschutz weisen darauf hin, dass Teile der Partei rechtsextreme Tendenzen aufweisen. Kritisiert wird oft eine Sprache, die Grenzen verschiebt, Minderheiten ausgrenzt (Wir-gegen-Die-Denken) und demokratische Institutionen (wie Medien oder Gerichte) pauschal abwertet.
-            </p>
-          </div>
-          <hr className="border-gray-600" />
-          <div>
-            <h4 className="text-2xl font-bold text-cyan-400 flex items-center mb-3">
-              <History className="w-6 h-6 mr-3" /> Parallelen zu Mechanismen aus "Die Welle"?
-            </h4>
-            <p className="text-gray-200 pl-9 text-base md:text-lg leading-relaxed">
-              Auch moderne rechtspopulistische Strömungen (weltweit) nutzen Techniken der Identitätsbildung: Eine starke In-Group (das "wahre Volk") wird gegen Out-Groups (Migranten, "Eliten") in Stellung gebracht. Einfache Parolen ersetzen differenzierte Debatten – eine Dynamik, die auch im Experiment "Die Welle" zum Verlust von Individualität führte.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-const HistorischerVergleich = () => (
-  <section id="historie" className="py-24 px-4 bg-gray-950/50">
-    <div className="max-w-6xl mx-auto">
-      <SectionTitle subtitle="Kann Geschichte sich wiederholen? Mechanismen im Vergleich.">Historische Vergleiche</SectionTitle>
-      
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-cyan-950/30 p-8 rounded-xl border border-cyan-900">
-          <h3 className="text-3xl font-heading font-bold text-white mb-6 text-center">Im Buch (Die Welle)</h3>
-          <ul className="space-y-5 text-gray-200 text-lg">
-            <li className="flex items-start">
-              <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">1.</span>
-              <span className="leading-relaxed"><strong>Uniformität:</strong> Weiße Hemden, um Gleichheit zu erzwingen und Individualität zu löschen.</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">2.</span>
-              <span className="leading-relaxed"><strong>Slogans:</strong> "Macht durch Disziplin, Macht durch Gemeinschaft." Unhinterfragtes Nachsprechen.</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">3.</span>
-              <span className="leading-relaxed"><strong>Feindbilder:</strong> Die Schülerzeitung ("Ente") wird bedroht, weil sie kritisch berichtet.</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">4.</span>
-              <span className="leading-relaxed"><strong>Führerprinzip:</strong> Ben Ross wird nicht mehr als Lehrer, sondern als unfehlbarer Anführer ("Mr. Ross") behandelt.</span>
-            </li>
-          </ul>
-        </div>
-
-        <div className="bg-gray-900/50 p-8 rounded-xl border border-gray-700">
-          <h3 className="text-3xl font-heading font-bold text-white mb-6 text-center">In der Realität (Historisch & Aktuell)</h3>
-          <ul className="space-y-5 text-gray-200 text-lg">
-            <li className="flex items-start">
-              <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">1.</span>
-              <span className="leading-relaxed"><strong>Symbole:</strong> Von historischen Armbinden (NS-Zeit) bis hin zu bestimmten Emojis oder Codes in sozialen Netzwerken heute.</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">2.</span>
-              <span className="leading-relaxed"><strong>Propaganda:</strong> Heute oft durch algorithmisch gesteuerte Memes, Fake News und "Alternative Fakten".</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">3.</span>
-              <span className="leading-relaxed"><strong>Lügenpresse-Vorwurf:</strong> Der systematische Versuch, unabhängige Medien als unglaubwürdig oder feindlich darzustellen.</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">4.</span>
-              <span className="leading-relaxed"><strong>Personenkult:</strong> Starke Führerfiguren (z.B. Trump, Putin), die behaupten, allein den Willen des Volkes umzusetzen.</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-const Quiz = () => {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [score, setScore] = useState({ independent: 0, team: 0, influenced: 0 });
-  const [showResult, setShowResult] = useState(false);
-
-  const questions = [
-    {
-      q: "Ein beliebter Mitschüler macht sich in der WhatsApp-Klasse-Gruppe über jemand Schwächeren lustig. Viele lachen (Emojis). Was tust du?",
-      answers: [
-        { text: "Ich schreibe öffentlich, dass das nicht okay ist.", type: "independent" },
-        { text: "Ich lese es, mische mich aber nicht ein. Will keinen Stress.", type: "team" },
-        { text: "Ich schicke auch ein Lach-Emoji, um dazuzugehören.", type: "influenced" }
-      ]
-    },
-    {
-      q: "Ein Influencer, den du magst, postet eine krasse politische Behauptung. Alle in den Kommentaren stimmen zu.",
-      answers: [
-        { text: "Ich teile den Post sofort. Wenn alle zustimmen, wird's wohl stimmen.", type: "influenced" },
-        { text: "Ich google erstmal, ob das überhaupt wahr ist, bevor ich es glaube.", type: "independent" },
-        { text: "Ich like den Post, denke aber nicht weiter darüber nach.", type: "team" }
-      ]
-    },
-    {
-      q: "Dein Lehrer verlangt plötzlich, dass sich alle zur Begrüßung hinstellen und im Chor einen Spruch aufsagen. Wer nicht mitmacht, bekommt Ärger.",
-      answers: [
-        { text: "Ich mache mit, weil ich keinen Ärger mit dem Lehrer will.", type: "team" },
-        { text: "Ich finde es cool, dass wir endlich etwas als Gemeinschaft machen und motiviere andere.", type: "influenced" },
-        { text: "Ich bleibe sitzen und frage nach dem pädagogischen Sinn dieser Regel.", type: "independent" }
-      ]
+    :root {
+      --neon-blue: #00d2ff;
+      --dark-bg: #0b0f19;
     }
-  ];
 
-  const handleAnswer = (type) => {
-    setScore(prev => ({ ...prev, [type]: prev[type] + 1 }));
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      setShowResult(true);
+    html {
+      scroll-behavior: smooth;
     }
-  };
 
-  const getResult = () => {
-    if (score.independent > score.team && score.independent > score.influenced) {
-      return { title: "Unabhängiger Denker 🦅", desc: "Du hinterfragst Autoritäten und Mehrheiten. Das ist anstrengend, aber wichtig für eine Demokratie. Achte darauf, trotzdem kompromissbereit zu bleiben." };
-    } else if (score.influenced > score.team && score.influenced > score.independent) {
-      return { title: "Stark beeinflussbar 🌊", desc: "Du neigst dazu, mit der Masse zu schwimmen, um Konflikte zu vermeiden. Vorsicht: Genau auf diese Weise funktionieren Mechanismen wie in 'Die Welle'." };
-    } else {
-      return { title: "Teamorientiert 🤝", desc: "Dir ist Harmonie und Gemeinschaft wichtig. Du wägst ab. Pass auf, dass du deine eigene Meinung nicht verrätst, nur um dazuzugehören." };
+    body {
+      background-color: var(--dark-bg);
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
     }
-  };
 
-  return (
-    <section id="selbsttest" className="py-24 px-4">
-      <div className="max-w-3xl mx-auto text-center">
-        <SectionTitle subtitle="Teste dich selbst: Wie anfällig bist du für Gruppendruck?">Interaktiver Selbsttest</SectionTitle>
-        
-        <Card className="text-left mt-8">
-          {!showResult ? (
-            <div>
-              <p className="text-cyan-400 text-lg mb-4 font-bold">Frage {currentQuestion + 1} von {questions.length}</p>
-              <h3 className="text-2xl md:text-3xl text-white font-bold mb-8 leading-relaxed">{questions[currentQuestion].q}</h3>
-              <div className="space-y-4">
-                {questions[currentQuestion].answers.map((ans, idx) => (
-                  <button 
-                    key={idx}
-                    onClick={() => handleAnswer(ans.type)}
-                    className="w-full text-left p-5 text-lg bg-gray-800 hover:bg-cyan-900/50 border border-gray-600 hover:border-cyan-400 rounded-lg transition-all text-gray-100 cursor-pointer shadow-sm hover:shadow-[0_0_15px_rgba(0,210,255,0.3)]"
-                  >
-                    {ans.text}
-                  </button>
+    h1, h2, h3, .font-heading {
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    /* Neon Effects */
+    .neon-text {
+      text-shadow: 0 0 5px rgba(0, 210, 255, 0.5), 0 0 10px rgba(0, 210, 255, 0.3);
+    }
+    
+    .neon-border {
+      box-shadow: 0 0 10px rgba(0, 210, 255, 0.2), inset 0 0 10px rgba(0, 210, 255, 0.1);
+      border: 1px solid rgba(0, 210, 255, 0.3);
+    }
+
+    .neon-border:hover {
+      box-shadow: 0 0 15px rgba(0, 210, 255, 0.5), inset 0 0 15px rgba(0, 210, 255, 0.2);
+      border: 1px solid var(--neon-blue);
+    }
+
+    /* Glitch Effect */
+    .glitch-wrapper {
+      position: relative;
+    }
+    
+    .glitch {
+      position: relative;
+      color: white;
+      font-weight: 700;
+    }
+    
+    .glitch::before, .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.8;
+    }
+    
+    .glitch::before {
+      left: 2px;
+      text-shadow: -2px 0 #ff00c1;
+      clip: rect(44px, 450px, 56px, 0);
+      animation: glitch-anim 5s infinite linear alternate-reverse;
+    }
+    
+    .glitch::after {
+      left: -2px;
+      text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
+      animation: glitch-anim2 5s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim {
+      0% { clip-path: inset(20% 0 80% 0); }
+      20% { clip-path: inset(60% 0 10% 0); }
+      40% { clip-path: inset(40% 0 50% 0); }
+      60% { clip-path: inset(80% 0 5% 0); }
+      80% { clip-path: inset(10% 0 70% 0); }
+      100% { clip-path: inset(30% 0 40% 0); }
+    }
+
+    @keyframes glitch-anim2 {
+      0% { clip-path: inset(10% 0 60% 0); }
+      20% { clip-path: inset(80% 0 5% 0); }
+      40% { clip-path: inset(30% 0 20% 0); }
+      60% { clip-path: inset(70% 0 10% 0); }
+      80% { clip-path: inset(40% 0 50% 0); }
+      100% { clip-path: inset(20% 0 30% 0); }
+    }
+
+    /* Animated Wave Background */
+    .wave-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+      background: linear-gradient(180deg, #0b0f19 0%, #06182c 100%);
+    }
+
+    .wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 200%;
+      height: 100px;
+      background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%2300d2ff" fill-opacity="0.1" d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,170.7C960,192,1056,224,1152,218.7C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+      background-size: 50% 100%;
+      animation: wave-animation 10s linear infinite;
+    }
+
+    .wave2 {
+      bottom: 10px;
+      opacity: 0.5;
+      animation: wave-animation-reverse 15s linear infinite;
+      background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%2300d2ff" fill-opacity="0.2" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,213.3C672,224,768,224,864,202.7C960,181,1056,139,1152,128C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+      background-size: 50% 100%;
+    }
+
+    @keyframes wave-animation {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    @keyframes wave-animation-reverse {
+      0% { transform: translateX(-50%); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #00d2ff;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00a0cc;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React Code -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- COMPONENTS ---
+    const SectionTitle = ({ children, subtitle }) => (
+      <div className="mb-12 text-center">
+        <h2 className="text-4xl md:text-5xl font-bold font-heading text-white mb-4 neon-text inline-block">
+          {children}
+        </h2>
+        {subtitle && <p className="text-cyan-400 max-w-2xl mx-auto text-lg">{subtitle}</p>}
+      </div>
+    );
+
+    const Card = ({ children, className = "" }) => (
+      <div className={`bg-gray-900/80 backdrop-blur-sm p-6 rounded-xl neon-border transition-all duration-300 ${className}`}>
+        {children}
+      </div>
+    );
+
+    const handleScrollTo = (e, id) => {
+      e.preventDefault();
+      const element = document.getElementById(id);
+      if (element) {
+        const y = element.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    };
+
+    // --- SECTIONS ---
+    const Hero = () => (
+      <section className="relative min-h-screen flex items-center justify-center pt-20 px-4">
+        <div className="wave-bg">
+          <div className="wave"></div>
+          <div className="wave wave2"></div>
+        </div>
+        <div className="z-10 text-center max-w-4xl mx-auto">
+          <div className="inline-block mb-4 px-4 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm tracking-widest uppercase animate-pulse">
+            Klasse 8–12 Projekt
+          </div>
+          <div className="glitch-wrapper mb-6">
+            <h1 className="text-6xl md:text-8xl font-bold font-heading glitch uppercase tracking-wider" data-text="DIE WELLE">
+              DIE WELLE
+            </h1>
+          </div>
+          <h2 className="text-2xl md:text-4xl font-heading text-white mb-6">
+            Könnte es heute <span className="text-cyan-400">wieder passieren?</span>
+          </h2>
+          <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Eine interaktive Webseite über Gruppendruck, Autorität, Manipulation in sozialen Medien und die Bedeutung unserer Demokratie.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#das-buch" onClick={(e) => handleScrollTo(e, 'das-buch')} className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-bold text-lg rounded-lg transition-all shadow-[0_0_20px_rgba(0,210,255,0.4)] hover:shadow-[0_0_30px_rgba(0,210,255,0.6)] flex items-center justify-center cursor-pointer">
+              Buch entdecken <i className="ph ph-arrow-right ml-2 text-xl"></i>
+            </a>
+            <a href="#selbsttest" onClick={(e) => handleScrollTo(e, 'selbsttest')} className="px-8 py-4 border border-cyan-500 text-cyan-400 hover:bg-cyan-500/10 font-bold text-lg rounded-lg transition-all flex items-center justify-center cursor-pointer">
+              Zum Selbsttest
+            </a>
+          </div>
+        </div>
+      </section>
+    );
+
+    const DasBuch = () => {
+      const timeline = [
+        { day: "Tag 1", title: "Disziplin", desc: "Macht durch Disziplin. Aufrechtes Sitzen, schnelle Antworten. Die Schüler sind fasziniert von der neuen Effizienz." },
+        { day: "Tag 2", title: "Gemeinschaft", desc: "Macht durch Gemeinschaft. Ein Wir-Gefühl entsteht. Ein eigenes Symbol und ein Gruß werden eingeführt." },
+        { day: "Tag 3", title: "Ausgrenzung", desc: "Macht durch Handeln. Mitgliedskarten verteilen Rollen. Wer nicht mitmacht, gehört nicht dazu." },
+        { day: "Tag 4", title: "Kontrolle", desc: "Leibwächter werden ernannt. Schüler spionieren sich gegenseitig aus. Die Situation eskaliert auf dem Schulhof." },
+        { day: "Tag 5", title: "Zusammenbruch", desc: "Die Versammlung. Der Lehrer enthüllt, dass sie sich genau wie im Nationalsozialismus verhalten haben. Schock." }
+      ];
+
+      return (
+        <section id="das-buch" className="py-24 px-4 bg-gray-950/50">
+          <div className="max-w-6xl mx-auto">
+            <SectionTitle subtitle="Von Morton Rhue (1981) – Basierend auf einem wahren Experiment von 1967.">Das Buch</SectionTitle>
+            
+            <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+              <Card>
+                <i className="ph ph-book-open text-5xl text-cyan-400 mb-4 inline-block"></i>
+                <h3 className="text-2xl font-bold text-white mb-2 font-heading">Handlungskurzfassung</h3>
+                <p className="text-gray-100 text-lg leading-relaxed mb-4">
+                  Der Geschichtslehrer Ben Ross will seinen Schülern erklären, wie der Nationalsozialismus entstehen konnte. Da die Schüler nicht glauben, dass so etwas heute noch möglich wäre, startet er ein Experiment: "Die Welle".
+                </p>
+                <p className="text-gray-100 text-lg leading-relaxed">
+                  Aus einem unschuldigen Spiel mit Disziplin und Gemeinschaftsgefühl wird rasch eine autoritäre Bewegung, die Andersdenkende unterdrückt.
+                </p>
+              </Card>
+              
+              <div className="relative border-l-2 border-cyan-900 pl-8 ml-4 md:ml-0">
+                {timeline.map((item, idx) => (
+                  <div key={idx} className="mb-8 relative">
+                    <div className="absolute w-4 h-4 bg-cyan-500 rounded-full -left-[41px] top-1 shadow-[0_0_10px_#00d2ff]"></div>
+                    <h4 className="text-xl font-bold text-cyan-400 mb-1">{item.day}: {item.title}</h4>
+                    <p className="text-gray-200 text-lg">{item.desc}</p>
+                  </div>
                 ))}
               </div>
             </div>
-          ) : (
-            <div className="text-center py-10 animate-fade-in">
-              <h3 className="text-4xl font-bold font-heading text-white mb-6">{getResult().title}</h3>
-              <p className="text-gray-200 text-xl mb-10 max-w-2xl mx-auto leading-relaxed">{getResult().desc}</p>
-              <button 
-                onClick={() => { setShowResult(false); setCurrentQuestion(0); setScore({ independent: 0, team: 0, influenced: 0 }); }}
-                className="px-8 py-4 text-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold cursor-pointer"
-              >
-                Test wiederholen
-              </button>
-            </div>
-          )}
-        </Card>
-      </div>
-    </section>
-  );
-};
-
-const SchutzDerDemokratie = () => (
-  <section id="schutz" className="py-24 px-4 bg-gray-950/50">
-    <div className="max-w-6xl mx-auto">
-      <SectionTitle subtitle="Was hindert eine 'Welle' daran, heute die Macht zu übernehmen?">Was schützt eine Demokratie?</SectionTitle>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[
-          { icon: <ShieldCheck className="w-8 h-8"/>, title: "Gewaltenteilung", desc: "Regierung, Parlament und Gerichte kontrollieren sich gegenseitig. Niemand hat absolute Macht." },
-          { icon: <AlertTriangle className="w-8 h-8"/>, title: "Freie Presse", desc: "Unabhängige Journalisten decken Fehler von Politikern auf, ohne vom Staat ins Gefängnis geworfen zu werden." },
-          { icon: <Users className="w-8 h-8"/>, title: "Freie Wahlen", desc: "Bürger können Regierungen ohne Gewalt abwählen, wenn sie mit deren Arbeit unzufrieden sind." },
-          { icon: <BookOpen className="w-8 h-8"/>, title: "Bildung", desc: "Das Erlernen von Medienkompetenz und kritischem Denken in der Schule (wie durch diese Webseite!)." },
-          { icon: <HelpCircle className="w-8 h-8"/>, title: "Meinungsfreiheit", desc: "Das Recht, Kritik zu äußern und unbeliebte Meinungen zu vertreten, solange sie nicht zu Gewalt aufrufen." }
-        ].map((item, idx) => (
-          <Card key={idx} className="flex flex-col items-center text-center hover:-translate-y-2">
-            <div className="text-cyan-400 mb-5 bg-cyan-900/30 p-4 rounded-full">
-              {item.icon}
-            </div>
-            <h4 className="text-2xl font-bold text-white mb-3">{item.title}</h4>
-            <p className="text-gray-200 text-base leading-relaxed">{item.desc}</p>
-          </Card>
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
-const Ressourcen = () => (
-  <section id="ressourcen" className="py-24 px-4 border-t border-gray-800">
-    <div className="max-w-4xl mx-auto text-center">
-      <SectionTitle>Ressourcen & Materialien</SectionTitle>
-      <div className="flex flex-wrap justify-center gap-6">
-        <a href="#" className="flex items-center px-6 py-3 text-lg bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded-lg transition-colors border border-gray-700 hover:border-cyan-500">
-          <BookOpen className="w-5 h-5 mr-3" /> Das Buch bestellen
-        </a>
-        <a href="#" className="flex items-center px-6 py-3 text-lg bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded-lg transition-colors border border-gray-700 hover:border-cyan-500">
-          <Link className="w-5 h-5 mr-3" /> Bundeszentrale für politische Bildung
-        </a>
-        <a href="#" className="flex items-center px-6 py-3 text-lg bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded-lg transition-colors border border-gray-700 hover:border-cyan-500">
-          <History className="w-5 h-5 mr-3" /> Doku: The Third Wave (1967)
-        </a>
-      </div>
-      <p className="text-gray-400 mt-12 text-base">
-        Ein Projektkonzept für die Klassenstufen 8–12. <br/>Erstellt im Rahmen der politischen Bildung und Demokratieförderung.
-      </p>
-    </div>
-  </section>
-);
-
-// --- MAIN APP COMPONENT ---
-
-export default function App() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+          </div>
+        </section>
+      );
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
-      
-      {/* Navbar */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-gray-950/90 backdrop-blur-md border-b border-cyan-900/50 py-3' : 'bg-transparent py-5'}`}>
-        <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
-          <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-2xl font-bold font-heading text-white flex items-center cursor-pointer">
-            <span className="text-cyan-400 mr-2">/</span>DIE_WELLE
-          </a>
-          <div className="hidden md:flex space-x-6 text-base font-semibold">
-            <a href="#das-buch" onClick={(e) => handleScrollTo(e, 'das-buch')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">Das Buch</a>
-            <a href="#psychologie" onClick={(e) => handleScrollTo(e, 'psychologie')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">Psychologie</a>
-            <a href="#relevanz" onClick={(e) => handleScrollTo(e, 'relevanz')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">Heute</a>
-            <a href="#afd" onClick={(e) => handleScrollTo(e, 'afd')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">AfD-Debatte</a>
-            <a href="#selbsttest" onClick={(e) => handleScrollTo(e, 'selbsttest')} className="text-cyan-400 hover:text-white transition-colors cursor-pointer">Selbsttest</a>
+    const Psychologie = () => {
+      const [showAnswer, setShowAnswer] = useState(false);
+
+      return (
+        <section id="psychologie" className="py-24 px-4">
+          <div className="max-w-6xl mx-auto">
+            <SectionTitle subtitle="Die unsichtbaren Fäden, die unser Verhalten steuern.">Die Psychologie dahinter</SectionTitle>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+              <Card>
+                <i className="ph ph-users text-4xl text-cyan-400 mb-4 inline-block"></i>
+                <h3 className="text-xl font-bold text-white mb-2 font-heading">Gruppenzwang</h3>
+                <p className="text-gray-200 text-base">Der Drang, dazuzugehören. Menschen passen ihre Meinung an die Mehrheit an, aus Angst vor Isolation.</p>
+              </Card>
+              <Card>
+                <i className="ph ph-warning text-4xl text-cyan-400 mb-4 inline-block"></i>
+                <h3 className="text-xl font-bold text-white mb-2 font-heading">Autorität</h3>
+                <p className="text-gray-200 text-base">Das Milgram-Experiment zeigte: Viele Menschen befolgen Anweisungen von Respektspersonen, selbst wenn sie moralisch falsch sind.</p>
+              </Card>
+              <Card>
+                <i className="ph ph-shield-warning text-4xl text-cyan-400 mb-4 inline-block"></i>
+                <h3 className="text-xl font-bold text-white mb-2 font-heading">Wir-gegen-Die</h3>
+                <p className="text-gray-200 text-base">Gruppen definieren sich oft über Feindbilder. Wer nicht für uns ist, ist gegen uns (Polarisierung).</p>
+              </Card>
+              <Card>
+                <i className="ph ph-brain text-4xl text-cyan-400 mb-4 inline-block"></i>
+                <h3 className="text-xl font-bold text-white mb-2 font-heading">Echokammern</h3>
+                <p className="text-gray-200 text-base">Algorithmen zeigen uns nur Meinungen, die unsere eigene bestätigen. Widerspruch verschwindet.</p>
+              </Card>
+            </div>
+
+            <div className="bg-cyan-900/20 border border-cyan-800 rounded-2xl p-8 text-center">
+              <h3 className="text-2xl font-bold text-white mb-6 font-heading">Gedankenexperiment</h3>
+              <p className="text-xl md:text-2xl text-gray-100 mb-8 max-w-2xl mx-auto leading-relaxed">
+                Stell dir vor, deine gesamte Klasse behauptet, eine offensichtlich falsche Antwort sei richtig. Würdest du als Einziger widersprechen?
+              </p>
+              {!showAnswer ? (
+                <button 
+                  onClick={() => setShowAnswer(true)}
+                  className="px-8 py-4 text-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold transition-colors cursor-pointer"
+                >
+                  Realität anzeigen
+                </button>
+              ) : (
+                <div className="animate-fade-in">
+                  <p className="text-cyan-300 text-xl mb-3"><strong>Asch-Konformitätsexperiment (1951):</strong></p>
+                  <p className="text-gray-100 text-lg max-w-2xl mx-auto leading-relaxed">
+                    Rund ein Drittel der Versuchspersonen passte sich der offensichtlich falschen Mehrheitsmeinung an. Der Druck der Gruppe ist oft stärker als die eigene Wahrnehmung.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    const RelevanzHeute = () => (
+      <section id="relevanz" className="py-24 px-4 bg-gray-950/50">
+        <div className="max-w-6xl mx-auto">
+          <SectionTitle subtitle="Warum die Mechanismen der Welle 2026 präsenter sind denn je.">Warum ist das heute relevant?</SectionTitle>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="col-span-1 md:col-span-3 lg:col-span-1 flex flex-col justify-center">
+              <h3 className="text-3xl font-heading font-bold text-white mb-4">Demokratie unter Druck</h3>
+              <p className="text-gray-100 text-lg leading-relaxed mb-6">
+                Demokratie lebt von Diskussion, Kompromissen und Widerspruch. Doch in Krisenzeiten wirken autoritäre, einfache Lösungen oft verlockend.
+              </p>
+              <ul className="space-y-4">
+                <li className="flex items-start"><i className="ph ph-check-circle text-2xl text-cyan-400 mr-3 mt-1 shrink-0"></i> <span className="text-gray-200 text-lg">Extreme Bewegungen versprechen simple Antworten auf komplexe Fragen.</span></li>
+                <li className="flex items-start"><i className="ph ph-check-circle text-2xl text-cyan-400 mr-3 mt-1 shrink-0"></i> <span className="text-gray-200 text-lg">Kritisches Denken ist der beste Schutz gegen Manipulation.</span></li>
+              </ul>
+            </div>
+            
+            <Card className="lg:col-span-1">
+              <div className="text-cyan-400 text-5xl mb-4">📱</div>
+              <h4 className="text-2xl font-bold text-white mb-3">Soziale Medien</h4>
+              <p className="text-gray-200 text-base leading-relaxed">
+                TikTok, Instagram und Co. funktionieren wie Brandbeschleuniger. Algorithmen belohnen extreme, emotionale Inhalte, da sie die Nutzer länger auf der Plattform halten. Falschinformationen (Fake News) verbreiten sich oft schneller als Fakten, weil sie spektakulärer klingen.
+              </p>
+            </Card>
+
+            <Card className="lg:col-span-1">
+              <div className="text-cyan-400 text-5xl mb-4">🎭</div>
+              <h4 className="text-2xl font-bold text-white mb-3">Populismus weltweit</h4>
+              <p className="text-gray-200 text-base leading-relaxed">
+                Populismus teilt die Welt in "das reine Volk" und "die korrupte Elite". Komplexe Probleme (wie Klimawandel, Migration, Inflation) werden auf einfache Feindbilder reduziert. Diese Taktik wird von Parteien weltweit genutzt, um Wähler emotional an sich zu binden.
+              </p>
+            </Card>
           </div>
         </div>
-      </nav>
+      </section>
+    );
 
-      {/* Main Content */}
-      <main>
-        <Hero />
-        <DasBuch />
-        <Psychologie />
-        <RelevanzHeute />
-        <AfDDebatte />
-        <HistorischerVergleich />
-        <Quiz />
-        <SchutzDerDemokratie />
-        <Ressourcen />
-      </main>
-    </>
-  );
-}
+    const AfDDebatte = () => (
+      <section id="afd" className="py-24 px-4">
+        <div className="max-w-4xl mx-auto">
+          <SectionTitle subtitle="Eine sachliche Analyse aktueller politischer Phänomene am Beispiel der AfD in Deutschland.">Die AfD-Debatte</SectionTitle>
+          
+          <div className="bg-gray-800/50 rounded-xl p-6 md:p-10 neon-border border-gray-700">
+            <p className="text-gray-100 text-lg mb-8 italic border-l-4 border-cyan-500 pl-4 leading-relaxed">
+              Die Demokratie lebt davon, dass politische Positionen diskutiert, verstanden und kritisch hinterfragt werden. Hier geht es nicht um Pauschalurteile, sondern um das Verstehen von Mechanismen.
+            </p>
+
+            <div className="space-y-8">
+              <div>
+                <h4 className="text-2xl font-bold text-cyan-400 flex items-center mb-3">
+                  <i className="ph ph-question text-2xl mr-3"></i> Warum wählen Menschen die AfD?
+                </h4>
+                <p className="text-gray-200 pl-9 text-base md:text-lg leading-relaxed">
+                  Viele Wähler treibt ein Gefühl des Protestes an. Sie fühlen sich von etablierten Parteien bei Themen wie Migration, Inflation oder Klimaschutzpolitik nicht verstanden oder bevormundet. Die AfD nutzt diese Sorgen und positioniert sich als einzige Alternative zum "Establishment".
+                </p>
+              </div>
+              <hr className="border-gray-600" />
+              <div>
+                <h4 className="text-2xl font-bold text-cyan-400 flex items-center mb-3">
+                  <i className="ph ph-warning text-2xl mr-3"></i> Welche Kritik gibt es an der Partei?
+                </h4>
+                <p className="text-gray-200 pl-9 text-base md:text-lg leading-relaxed">
+                  Politikwissenschaftler und der Verfassungsschutz weisen darauf hin, dass Teile der Partei rechtsextreme Tendenzen aufweisen. Kritisiert wird oft eine Sprache, die Grenzen verschiebt, Minderheiten ausgrenzt (Wir-gegen-Die-Denken) und demokratische Institutionen (wie Medien oder Gerichte) pauschal abwertet.
+                </p>
+              </div>
+              <hr className="border-gray-600" />
+              <div>
+                <h4 className="text-2xl font-bold text-cyan-400 flex items-center mb-3">
+                  <i className="ph ph-clock-counter-clockwise text-2xl mr-3"></i> Parallelen zu Mechanismen aus "Die Welle"?
+                </h4>
+                <p className="text-gray-200 pl-9 text-base md:text-lg leading-relaxed">
+                  Auch moderne rechtspopulistische Strömungen (weltweit) nutzen Techniken der Identitätsbildung: Eine starke In-Group (das "wahre Volk") wird gegen Out-Groups (Migranten, "Eliten") in Stellung gebracht. Einfache Parolen ersetzen differenzierte Debatten – eine Dynamik, die auch im Experiment "Die Welle" zum Verlust von Individualität führte.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+
+    const HistorischerVergleich = () => (
+      <section id="historie" className="py-24 px-4 bg-gray-950/50">
+        <div className="max-w-6xl mx-auto">
+          <SectionTitle subtitle="Kann Geschichte sich wiederholen? Mechanismen im Vergleich.">Historische Vergleiche</SectionTitle>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-cyan-950/30 p-8 rounded-xl border border-cyan-900">
+              <h3 className="text-3xl font-heading font-bold text-white mb-6 text-center">Im Buch (Die Welle)</h3>
+              <ul className="space-y-5 text-gray-200 text-lg">
+                <li className="flex items-start">
+                  <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">1.</span>
+                  <span className="leading-relaxed"><strong>Uniformität:</strong> Weiße Hemden, um Gleichheit zu erzwingen und Individualität zu löschen.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">2.</span>
+                  <span className="leading-relaxed"><strong>Slogans:</strong> "Macht durch Disziplin, Macht durch Gemeinschaft." Unhinterfragtes Nachsprechen.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">3.</span>
+                  <span className="leading-relaxed"><strong>Feindbilder:</strong> Die Schülerzeitung ("Ente") wird bedroht, weil sie kritisch berichtet.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-cyan-400 font-bold text-xl mr-3 mt-0.5">4.</span>
+                  <span className="leading-relaxed"><strong>Führerprinzip:</strong> Ben Ross wird nicht mehr als Lehrer, sondern als unfehlbarer Anführer ("Mr. Ross") behandelt.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-gray-900/50 p-8 rounded-xl border border-gray-700">
+              <h3 className="text-3xl font-heading font-bold text-white mb-6 text-center">In der Realität (Historisch & Aktuell)</h3>
+              <ul className="space-y-5 text-gray-200 text-lg">
+                <li className="flex items-start">
+                  <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">1.</span>
+                  <span className="leading-relaxed"><strong>Symbole:</strong> Von historischen Armbinden (NS-Zeit) bis hin zu bestimmten Emojis oder Codes in sozialen Netzwerken heute.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">2.</span>
+                  <span className="leading-relaxed"><strong>Propaganda:</strong> Heute oft durch algorithmisch gesteuerte Memes, Fake News und "Alternative Fakten".</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">3.</span>
+                  <span className="leading-relaxed"><strong>Lügenpresse-Vorwurf:</strong> Der systematische Versuch, unabhängige Medien als unglaubwürdig oder feindlich darzustellen.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-gray-400 font-bold text-xl mr-3 mt-0.5">4.</span>
+                  <span className="leading-relaxed"><strong>Personenkult:</strong> Starke Führerfiguren (z.B. Trump, Putin), die behaupten, allein den Willen des Volkes umzusetzen.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+
+    const Quiz = () => {
+      const [currentQuestion, setCurrentQuestion] = useState(0);
+      const [score, setScore] = useState({ independent: 0, team: 0, influenced: 0 });
+      const [showResult, setShowResult] = useState(false);
+
+      const questions = [
+        {
+          q: "Ein beliebter Mitschüler macht sich in der WhatsApp-Klasse-Gruppe über jemand Schwächeren lustig. Viele lachen (Emojis). Was tust du?",
+          answers: [
+            { text: "Ich schreibe öffentlich, dass das nicht okay ist.", type: "independent" },
+            { text: "Ich lese es, mische mich aber nicht ein. Will keinen Stress.", type: "team" },
+            { text: "Ich schicke auch ein Lach-Emoji, um dazuzugehören.", type: "influenced" }
+          ]
+        },
+        {
+          q: "Ein Influencer, den du magst, postet eine krasse politische Behauptung. Alle in den Kommentaren stimmen zu.",
+          answers: [
+            { text: "Ich teile den Post sofort. Wenn alle zustimmen, wird's wohl stimmen.", type: "influenced" },
+            { text: "Ich google erstmal, ob das überhaupt wahr ist, bevor ich es glaube.", type: "independent" },
+            { text: "Ich like den Post, denke aber nicht weiter darüber nach.", type: "team" }
+          ]
+        },
+        {
+          q: "Dein Lehrer verlangt plötzlich, dass sich alle zur Begrüßung hinstellen und im Chor einen Spruch aufsagen. Wer nicht mitmacht, bekommt Ärger.",
+          answers: [
+            { text: "Ich mache mit, weil ich keinen Ärger mit dem Lehrer will.", type: "team" },
+            { text: "Ich finde es cool, dass wir endlich etwas als Gemeinschaft machen und motiviere andere.", type: "influenced" },
+            { text: "Ich bleibe sitzen und frage nach dem pädagogischen Sinn dieser Regel.", type: "independent" }
+          ]
+        }
+      ];
+
+      const handleAnswer = (type) => {
+        setScore(prev => ({ ...prev, [type]: prev[type] + 1 }));
+        if (currentQuestion < questions.length - 1) {
+          setCurrentQuestion(prev => prev + 1);
+        } else {
+          setShowResult(true);
+        }
+      };
+
+      const getResult = () => {
+        if (score.independent > score.team && score.independent > score.influenced) {
+          return { title: "Unabhängiger Denker 🦅", desc: "Du hinterfragst Autoritäten und Mehrheiten. Das ist anstrengend, aber wichtig für eine Demokratie. Achte darauf, trotzdem kompromissbereit zu bleiben." };
+        } else if (score.influenced > score.team && score.influenced > score.independent) {
+          return { title: "Stark beeinflussbar 🌊", desc: "Du neigst dazu, mit der Masse zu schwimmen, um Konflikte zu vermeiden. Vorsicht: Genau auf diese Weise funktionieren Mechanismen wie in 'Die Welle'." };
+        } else {
+          return { title: "Teamorientiert 🤝", desc: "Dir ist Harmonie und Gemeinschaft wichtig. Du wägst ab. Pass auf, dass du deine eigene Meinung nicht verrätst, nur um dazuzugehören." };
+        }
+      };
+
+      return (
+        <section id="selbsttest" className="py-24 px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <SectionTitle subtitle="Teste dich selbst: Wie anfällig bist du für Gruppendruck?">Interaktiver Selbsttest</SectionTitle>
+            
+            <Card className="text-left mt-8">
+              {!showResult ? (
+                <div>
+                  <p className="text-cyan-400 text-lg mb-4 font-bold">Frage {currentQuestion + 1} von {questions.length}</p>
+                  <h3 className="text-2xl md:text-3xl text-white font-bold mb-8 leading-relaxed">{questions[currentQuestion].q}</h3>
+                  <div className="space-y-4">
+                    {questions[currentQuestion].answers.map((ans, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => handleAnswer(ans.type)}
+                        className="w-full text-left p-5 text-lg bg-gray-800 hover:bg-cyan-900/50 border border-gray-600 hover:border-cyan-400 rounded-lg transition-all text-gray-100 cursor-pointer shadow-sm hover:shadow-[0_0_15px_rgba(0,210,255,0.3)]"
+                      >
+                        {ans.text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-10 animate-fade-in">
+                  <h3 className="text-4xl font-bold font-heading text-white mb-6">{getResult().title}</h3>
+                  <p className="text-gray-200 text-xl mb-10 max-w-2xl mx-auto leading-relaxed">{getResult().desc}</p>
+                  <button 
+                    onClick={() => { setShowResult(false); setCurrentQuestion(0); setScore({ independent: 0, team: 0, influenced: 0 }); }}
+                    className="px-8 py-4 text-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold cursor-pointer"
+                  >
+                    Test wiederholen
+                  </button>
+                </div>
+              )}
+            </Card>
+          </div>
+        </section>
+      );
+    };
+
+    const SchutzDerDemokratie = () => (
+      <section id="schutz" className="py-24 px-4 bg-gray-950/50">
+        <div className="max-w-6xl mx-auto">
+          <SectionTitle subtitle="Was hindert eine 'Welle' daran, heute die Macht zu übernehmen?">Was schützt eine Demokratie?</SectionTitle>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: <i className="ph ph-shield-check text-3xl"></i>, title: "Gewaltenteilung", desc: "Regierung, Parlament und Gerichte kontrollieren sich gegenseitig. Niemand hat absolute Macht." },
+              { icon: <i className="ph ph-warning text-3xl"></i>, title: "Freie Presse", desc: "Unabhängige Journalisten decken Fehler von Politikern auf, ohne vom Staat ins Gefängnis geworfen zu werden." },
+              { icon: <i className="ph ph-users text-3xl"></i>, title: "Freie Wahlen", desc: "Bürger können Regierungen ohne Gewalt abwählen, wenn sie mit deren Arbeit unzufrieden sind." },
+              { icon: <i className="ph ph-book-open text-3xl"></i>, title: "Bildung", desc: "Das Erlernen von Medienkompetenz und kritischem Denken in der Schule (wie durch diese Webseite!)." },
+              { icon: <i className="ph ph-question text-3xl"></i>, title: "Meinungsfreiheit", desc: "Das Recht, Kritik zu äußern und unbeliebte Meinungen zu vertreten, solange sie nicht zu Gewalt aufrufen." }
+            ].map((item, idx) => (
+              <Card key={idx} className="flex flex-col items-center text-center hover:-translate-y-2">
+                <div className="text-cyan-400 mb-5 bg-cyan-900/30 p-4 rounded-full">
+                  {item.icon}
+                </div>
+                <h4 className="text-2xl font-bold text-white mb-3">{item.title}</h4>
+                <p className="text-gray-200 text-base leading-relaxed">{item.desc}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+
+    const Ressourcen = () => (
+      <section id="ressourcen" className="py-24 px-4 border-t border-gray-800">
+        <div className="max-w-4xl mx-auto text-center">
+          <SectionTitle>Ressourcen & Materialien</SectionTitle>
+          <div className="flex flex-wrap justify-center gap-6">
+            <a href="#" className="flex items-center px-6 py-3 text-lg bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded-lg transition-colors border border-gray-700 hover:border-cyan-500">
+              <i className="ph ph-book-open text-xl mr-3"></i> Das Buch bestellen
+            </a>
+            <a href="#" className="flex items-center px-6 py-3 text-lg bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded-lg transition-colors border border-gray-700 hover:border-cyan-500">
+              <i className="ph ph-link text-xl mr-3"></i> Bundeszentrale für politische Bildung
+            </a>
+            <a href="#" className="flex items-center px-6 py-3 text-lg bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded-lg transition-colors border border-gray-700 hover:border-cyan-500">
+              <i className="ph ph-clock-counter-clockwise text-xl mr-3"></i> Doku: The Third Wave (1967)
+            </a>
+          </div>
+          <p className="text-gray-400 mt-12 text-base">
+            Ein Projektkonzept für die Klassenstufen 8–12. <br/>Erstellt im Rahmen der politischen Bildung und Demokratieförderung.
+          </p>
+        </div>
+      </section>
+    );
+
+    function App() {
+      const [scrolled, setScrolled] = useState(false);
+
+      useEffect(() => {
+        const handleScroll = () => {
+          setScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      return (
+        <div>
+          {/* Navbar */}
+          <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-gray-950/90 backdrop-blur-md border-b border-cyan-900/50 py-3' : 'bg-transparent py-5'}`}>
+            <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
+              <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-2xl font-bold font-heading text-white flex items-center cursor-pointer">
+                <span className="text-cyan-400 mr-2">/</span>DIE_WELLE
+              </a>
+              <div className="hidden md:flex space-x-6 text-base font-semibold">
+                <a href="#das-buch" onClick={(e) => handleScrollTo(e, 'das-buch')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">Das Buch</a>
+                <a href="#psychologie" onClick={(e) => handleScrollTo(e, 'psychologie')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">Psychologie</a>
+                <a href="#relevanz" onClick={(e) => handleScrollTo(e, 'relevanz')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">Heute</a>
+                <a href="#afd" onClick={(e) => handleScrollTo(e, 'afd')} className="text-gray-200 hover:text-cyan-400 transition-colors cursor-pointer">AfD-Debatte</a>
+                <a href="#selbsttest" onClick={(e) => handleScrollTo(e, 'selbsttest')} className="text-cyan-400 hover:text-white transition-colors cursor-pointer">Selbsttest</a>
+              </div>
+            </div>
+          </nav>
+
+          {/* Main Content */}
+          <main>
+            <Hero />
+            <DasBuch />
+            <Psychologie />
+            <RelevanzHeute />
+            <AfDDebatte />
+            <HistorischerVergleich />
+            <Quiz />
+            <SchutzDerDemokratie />
+            <Ressourcen />
+          </main>
+        </div>
+      );
+    }
+
+    // React App initialisieren
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
